@@ -4,8 +4,6 @@
 const int threshold = 10;    // minimum reading of the sensors that generates a note
 
 // notes to play, corresponding to the 3 sensors:
-int notes[] = {
-  NOTE_A4, NOTE_B4,NOTE_C3 };
 
 void setup() {
 
