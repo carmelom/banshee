@@ -83,4 +83,5 @@ void playMarciaImperiale() {
   currentLen = sizeof(durationMarciaImperiale) / sizeof(durationMarciaImperiale[0]);
   currentScale = scaleMarciaImperiale;
   currentTransport = transportMarciaImperiale;
+  casinoMode = false;
 }

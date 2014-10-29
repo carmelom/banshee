@@ -87,4 +87,5 @@ void playSantanninoPuzza() {
   currentLen = sizeof(durationSantanninoPuzza) / sizeof(durationSantanninoPuzza[0]);
   currentScale = scaleSantanninoPuzza;
   currentTransport = transportSantanninoPuzza;
+  casinoMode = false;
 }

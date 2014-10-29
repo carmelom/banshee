@@ -30,4 +30,5 @@ void playSonPerdenti() {
   currentLen = sizeof(durationSonPerdenti) / sizeof(durationSonPerdenti[0]);
   currentScale = scaleSonPerdenti;
   currentTransport = transportSonPerdenti;
+  casinoMode = false;
 }

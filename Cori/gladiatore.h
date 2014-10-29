@@ -101,4 +101,5 @@ void playGladiatore() {
   currentLen = sizeof(durationGladiatore) / sizeof(durationGladiatore[0]);
   currentScale = scaleGladiatore;
   currentTransport = transportGladiatore;
+  casinoMode = false;
 }

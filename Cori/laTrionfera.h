@@ -102,4 +102,5 @@ void playLaTrionfera() {
   currentLen = sizeof(durationLaTrionfera) / sizeof(durationLaTrionfera[0]);
   currentScale = scaleLaTrionfera;
   currentTransport = transportLaTrionfera;
+  casinoMode = false;
 }

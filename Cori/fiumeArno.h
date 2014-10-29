@@ -87,4 +87,5 @@ void playFiumeArno() {
   currentLen = sizeof(durationFiumeArno) / sizeof(durationFiumeArno[0]);
   currentScale = scaleFiumeArno;
   currentTransport = transportFiumeArno;
+  casinoMode = false;
 }

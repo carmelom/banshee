@@ -39,8 +39,16 @@ int bansheeChannels[8] = {2, 3, 4, 5, 6, 7, 8, 9};
 int keypadChannels[6] = {A0, A1, A2, A3, A4, A5};
 int buttonFeedbackPin = 10;
 
-int clacsonChannels[6] = {0, 1, 2, 3, 4, 5};
+int clacsonChannels[6] = {0, 1, 2};
 int lightChannels[2] = {6, 7};
+
+int casinoDelayMin = 100;
+int casinoDelayMax = 500;
+int casinoFreqMin = 100;
+int casinoFreqMax = 1000;
+int casinoStopProb = 0.4;
+
+int casinoState[sizeof(clacsonChannels) / sizeof(clacsonChannels[0])];
 
 // --- LIGHT CONTROL ---
 // Whether lights are in sync with music or not
@@ -86,12 +94,96 @@ static void myTone(int pitch, unsigned long duration) {
     delayMicroseconds(us_delay);
     setClacsons(HIGH);
     delayMicroseconds(us_delay);
-    //queryButtons();
   }
+}
+
+static void myMultitoneCasino(unsigned duration) {
+  const int length = sizeof(casinoState) / sizeof(casinoState[0]);
+  unsigned long us_delay[length];
+  unsigned long missing[length];
+  boolean pinState[length];
+  for (int i = 0; i < length; i++) {
+    if (casinoState[i] == 0) {
+      us_delay[i] = 0;
+    } else {
+      us_delay[i] = 1000000 / casinoState[i] / 2;
+    }
+    missing[i] = us_delay[i];
+    pinState[i] = true;
+    digitalWrite(bansheeChannels[clacsonChannels[i]], HIGH);
+  }
+  long int millisStop = millis() + duration;
+  while (true) {
+    unsigned long wait = ((unsigned long) duration) * 1000L;
+    for (int i = 0; i < length; i++) {
+      if (missing[i] != 0) {
+        wait = min(wait, missing[i]);
+      }
+    }
+    delayMicroseconds(wait);
+    for (int i = 0; i < length; i++) {
+      if (missing[i] == wait) {
+        pinState[i] = !pinState[i];
+        digitalWrite(bansheeChannels[clacsonChannels[i]], pinState[i] ? HIGH : LOW);
+        missing[i] = us_delay[i];
+      } else if (missing[i] != 0) {
+        missing[i] -= wait;
+      }
+    }
+    if (millis() >= millisStop) {
+      break;
+    }
+  }
+  setClacsons(HIGH);
 }
 
 void stopPlayback() {
   currentDuration = NULL;
+  casinoMode = false;
+}
+
+void setCasino() {
+  currentDuration = NULL;
+  casinoMode = true;
+}
+
+void melodyIteration() {
+  // Check end of melody
+  if (currentDuration != NULL && currentPos == currentLen) {
+    stopPlayback();
+  }
+  
+  // If there is a melody, play a note
+  if (currentDuration != NULL) {
+    updateSyncLights();
+#if 0
+    tone(outputPin, currentTransport * currentPitch[currentPos], currentScale * currentDuration[currentPos]);
+    delay(currentScale * currentDuration[currentPos] * 1.00);
+    noTone(outputPin);
+    digitalWrite(outputPin, HIGH);
+#else
+    myTone(currentTransport * currentPitch[currentPos], currentScale * currentDuration[currentPos]);
+#endif
+    // The original code of toneMelody suggests to wait some more time to make the distinction between notes hearable
+    delay(currentScale * currentDuration[currentPos] * 0.30);
+    currentPos++;
+  }
+}
+
+void casinoIteration() {
+  updateSyncLights();
+
+  // Flip randomly one casino state
+  int idx = random(0, sizeof(casinoState) / sizeof(casinoState[0]));
+  if (random(0, 100) < 100 * casinoStopProb) {
+    casinoState[idx] = 0;
+  } else {
+    casinoState[idx] = random(casinoFreqMin, casinoFreqMax);
+  }
+
+  // Play casino for a random duration
+  int duration = random(casinoDelayMin, casinoDelayMax);
+  myMultitoneCasino(duration);
 }
 
 // --- INPUT CONTROL ---
@@ -139,9 +231,37 @@ void processInput() {
       }
     }
   } else if (inputState[0] == 2) {
-    
+    if (inputState[1] == 1) {
+      if (inputState[2] == 1) {
+        playFiumeArno();
+      } else if (inputState[2] == 2) {
+        playGladiatore();
+      } else if (inputState[2] == 3) {
+        playLaTrionfera();
+      } else if (inputState[2] == 4) {
+        playMarciaImperiale();
+      } else if (inputState[2] == 5) {
+        playSantannaMerda();
+      } else if (inputState[2] == 6) {
+        playSantanninoPuzza();
+      }
+    } else if (inputState[1] == 2) {
+      if (inputState[2] == 1) {
+        playSonPerdenti();
+      } else if (inputState[2] == 2) {
+        playWhenJohnny();
+      }
+    } else if (inputState[1] == 6) {
+      if (inputState[2] == 6) {
+        stopPlayback();
+      }
+    }
   } else if (inputState[0] == 3) {
-    
+    if (inputState[1] == 1) {
+      if (inputState[2] == 1) {
+        setCasino();
+      }
+    }
   }
 }
 
@@ -180,25 +300,10 @@ void setup() {
 }
 
 void loop() {
-  // Check end of melody
-  if (currentDuration != NULL && currentPos == currentLen) {
-    stopPlayback();
-  }
-  
-  // If there is a melody, play a note
-  if (currentDuration != NULL) {
-    updateSyncLights();
-#if 0
-    tone(outputPin, currentTransport * currentPitch[currentPos], currentScale * currentDuration[currentPos]);
-    delay(currentScale * currentDuration[currentPos] * 1.00);
-    noTone(outputPin);
-    digitalWrite(outputPin, HIGH);
-#else
-    myTone(currentTransport * currentPitch[currentPos], currentScale * currentDuration[currentPos]);
-#endif
-    // The original code of toneMelody suggests to wait some more time to make the distinction between notes hearable
-    delay(currentScale * currentDuration[currentPos] * 0.30);
-    currentPos++;
+  if (casinoMode) {
+    casinoIteration();
+  } else {
+    melodyIteration();
   }
   queryButtons();
 }

@@ -111,4 +111,5 @@ void playSantannaMerda() {
   currentLen = sizeof(durationSantannaMerda) / sizeof(durationSantannaMerda[0]);
   currentScale = scaleSantannaMerda;
   currentTransport = transportSantannaMerda;
+  casinoMode = false;
 }

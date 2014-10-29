@@ -155,4 +155,5 @@ void playWhenJohnny() {
   currentLen = sizeof(durationWhenJohnny) / sizeof(durationWhenJohnny[0]);
   currentScale = scaleWhenJohnny;
   currentTransport = transportWhenJohnny;
+  casinoMode = false;
 }
