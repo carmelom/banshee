@@ -18,6 +18,8 @@ This example code is in the public domain.
 
 #include "pitches.h"
 
+// At the moment casinoMode actually controls stroboMode
+
 int *currentDuration = NULL, *currentPitch = NULL;
 boolean casinoMode = false;
 int currentPos, currentLen;
@@ -27,7 +29,7 @@ double currentTransport;
 #include "fiumeArno.h"
 #include "santannaMerda.h"
 #include "whenJohnny.h"
-#include "sonPerdenti.h"
+//#include "sonPerdenti.h"
 #include "gladiatore.h"
 #include "laTrionfera.h"
 #include "marciaImperiale.h"
@@ -51,6 +53,9 @@ int casinoStopProb = 0.4;
 
 int casinoState[sizeof(clacsonChannels) / sizeof(clacsonChannels[0])];
 
+const int STROBO_ON_TIMINGS[7] = { 0, 10, 20, 50, 100, 200, 500 };
+const int STROBO_OFF_TIMINGS[7] = { 0, 10, 20, 50, 100, 200, 500 };
+
 // --- LIGHT CONTROL ---
 // Whether lights are in sync with music or not
 boolean syncLights = false;
@@ -68,12 +73,14 @@ void setLights(int first, int second) {
 
 void setStaticLights(int first, int second) {
   syncLights = false;
+  casinoMode = false;
   digitalWrite(bansheeChannels[lightChannels[0]], first);
   digitalWrite(bansheeChannels[lightChannels[1]], second);
 }
 
 void setSyncLights(boolean first, boolean second) {
   syncLights = true;
+  casinoMode = false;
   syncFirst = first;
   syncSecond = second;
 }
@@ -164,6 +171,12 @@ void setCasino() {
   casinoMode = true;
 }
 
+void stopCasino() {
+  casinoMode = false;
+  currentDuration = NULL;
+  setStaticLights(HIGH, HIGH);
+}
+
 void melodyIteration() {
   // Check end of melody
   if (currentDuration != NULL && currentPos == currentLen) {
@@ -187,7 +200,8 @@ void melodyIteration() {
   }
 }
 
-void casinoIteration() {
+// DISABLED
+void casinoIterationFalse() {
   updateSyncLights();
 
   // Flip randomly one casino state
@@ -201,6 +215,20 @@ void casinoIteration() {
   // Play casino for a random duration
   int duration = random(casinoDelayMin, casinoDelayMax);
   myMultitoneCasino(duration);
+}
+
+int stroboOn, stroboOff;
+boolean stroboAlternated;
+
+void casinoIteration() {
+  int first = LOW;
+  int second = stroboAlternated ? HIGH : LOW;
+  setLights(first, second);
+  myDelay(stroboOn);
+  first = HIGH;
+  second = stroboAlternated ? LOW : HIGH;
+  setLights(first, second);
+  myDelay(stroboOff);
 }
 
 // --- INPUT CONTROL ---
@@ -265,9 +293,13 @@ void processInput1() {
       }
     }
   } else if (inputState[0] == 3) {
-    if (inputState[1] == 1) {
-      if (inputState[2] == 1) {
-        setCasino();
+    stroboOn = STROBO_ON_TIMINGS[inputState[1]];
+    stroboOff = STROBO_OFF_TIMINGS[inputState[2]];
+    setCasino();
+  } else if (inputState[0] == 4) {
+    if (inputState[1] == 6) {
+      if (inputState[2] == 6) {
+        stopCasino();
       }
     }
   }
@@ -322,7 +354,7 @@ void setup() {
   initFiumeArno();
   initSantannaMerda();
   initWhenJohnny();
-  initSonPerdenti();
+  //initSonPerdenti();
   initGladiatore();
   initLaTrionfera();
   initMarciaImperiale();
