@@ -15,8 +15,6 @@ This example code is in the public domain.
  
  */
 
-#include <Keypad.h>
-
 #include "pitches.h"
 
 int *currentDuration = NULL, *currentPitch = NULL;
@@ -27,9 +25,14 @@ double currentTransport;
 #include "fiumeArno.h"
 #include "santannaMerda.h"
 #include "whenJohnny.h"
+#include "sonPerdenti.h"
+#include "gladiatore.h"
+#include "laTrionfera.h"
+#include "marciaImperiale.h"
+#include "santanninoPuzza.h"
 
-// To detect double sampling of the same button press
-int buttons[14];
+// To edge-trigger buttons
+int buttons[20];
 
 int outputPin = 12;
 int stopButton = 2;
@@ -38,20 +41,6 @@ int stopButton = 2;
 int fiumeArnoButton = 3;
 int santannaMerdaButton = 4;
 int whenJohnnyButton = 5;
-
-const byte rows = 6;
-const byte cols = 6;
-char keys[rows][cols] = {
-  {0, 1, 2, 3, 4, 5},
-  {6, 7, 8, 9, 10, 11},
-  {12, 13, 14, 15, 16, 17},
-  {18, 19, 20, 21, 22, 23},
-  {24, 25, 26, 27, 28, 29},
-  {30, 31, 32, 33, 34, 35}
-};
-byte rowPins[rows] = {6, 7, 8, 9, 10, 11};
-byte colPins[cols] = {A0, A1, A2, A3, A4, A5};
-Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
 
 static int queryButton(int number) {
   int res = LOW;
@@ -107,6 +96,12 @@ void setup() {
   initFiumeArno();
   initSantannaMerda();
   initWhenJohnny();
+  initSonPerdenti();
+  initGladiatore();
+  initLaTrionfera();
+  initMarciaImperiale();
+  initSantanninoPuzza();
+  
   //playFiumeArno();
 }
 
