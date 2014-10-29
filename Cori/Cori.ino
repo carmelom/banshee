@@ -1,8 +1,7 @@
 /*
   Cori - by Giovanni Mascellani
  
- circuit:
- * 8-ohm speaker on digital pin 8
+ circuit: ask Francesco Guatieri
  
  Based on "toneMelody" example.
  created 21 Jan 2010
