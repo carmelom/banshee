@@ -15,6 +15,8 @@ This example code is in the public domain.
  
  */
 
+//#define DEBUG
+
 #include "pitches.h"
 
 int *currentDuration = NULL, *currentPitch = NULL;
@@ -36,7 +38,7 @@ double currentTransport;
 int buttonState[20];
 
 int bansheeChannels[8] = {2, 3, 4, 5, 6, 7, 8, 9};
-int keypadChannels[6] = {A0, A1, A2, A3, A4, A5};
+int keypadChannels[6] = {A4, A5, A2, A3, A0, A1};  //{A0, A1, A2, A3, A4, A5};
 int buttonFeedbackPin = 10;
 
 int clacsonChannels[6] = {0, 1, 2};
@@ -55,6 +57,16 @@ int casinoState[sizeof(clacsonChannels) / sizeof(clacsonChannels[0])];
 boolean syncLights = false;
 boolean syncFirst, syncSecond;
 
+void myDelay(unsigned long ms) {
+  unsigned long stopMillis = millis() + ms;
+  while (millis() < stopMillis) { }
+}
+
+void setLights(int first, int second) {
+  digitalWrite(bansheeChannels[lightChannels[0]], first);
+  digitalWrite(bansheeChannels[lightChannels[1]], second);
+}
+
 void setStaticLights(int first, int second) {
   syncLights = false;
   digitalWrite(bansheeChannels[lightChannels[0]], first);
@@ -71,6 +83,8 @@ static void updateSyncLights() {
   if (syncLights) {
     digitalWrite(bansheeChannels[lightChannels[0]], syncFirst ? HIGH : LOW);
     digitalWrite(bansheeChannels[lightChannels[1]], syncSecond ? HIGH : LOW);
+    syncFirst = !syncFirst;
+    syncSecond = !syncSecond;
   }
 }
 
@@ -140,6 +154,10 @@ static void myMultitoneCasino(unsigned duration) {
 void stopPlayback() {
   currentDuration = NULL;
   casinoMode = false;
+  setClacsons(HIGH);
+  if (syncLights) {
+    setLights(HIGH, HIGH);
+  }
 }
 
 void setCasino() {
@@ -191,25 +209,14 @@ void blinkLed(int pin, int ms) {
   digitalWrite(pin, HIGH);
   delay(ms);
   digitalWrite(pin, LOW);
-}
-
-static int queryButton(int number) {
-  int res = LOW;
-  int state = digitalRead(number);
-  // Invert state, because we are using INPUT_PULLUP
-  state = state == HIGH ? LOW : HIGH;
-  if (state == HIGH && buttonState[number] == LOW) {
-    res = HIGH;
-  }
-  buttonState[number] = state;
-  return res;
+  delay(ms);
 }
 
 int inputState[3];
 int inputPos = 0;
 
 // Process a high-level input command
-void processInput() {
+void processInput1() {
   if (inputState[0] == 1) {
     if (inputState[1] == 1) {
       if (inputState[2] == 1) {
@@ -249,7 +256,7 @@ void processInput() {
       }
     } else if (inputState[1] == 2) {
       if (inputState[2] == 1) {
-        playSonPerdenti();
+        //playSonPerdenti();
       } else if (inputState[2] == 2) {
         playWhenJohnny();
       }
@@ -267,26 +274,46 @@ void processInput() {
   }
 }
 
+int queryButton(int number) {
+  int res = LOW;
+  int state = digitalRead(number);
+  // Invert state, because we are using INPUT_PULLUP
+  state = (state == HIGH ? LOW : HIGH);
+  if ((state == HIGH) && (buttonState[number] == LOW)) {
+    res = HIGH;
+  }
+  buttonState[number] = state;
+  return res;
+}
+
 // Check input buttons
 void queryButtons() {
-  for (int i = 0; i < sizeof(keypadChannels) / sizeof(keypadChannels[0]); i++) {
-    if (queryButton(keypadChannels[i]) == HIGH) {
+  const int length = sizeof(keypadChannels) / sizeof(keypadChannels[0]);
+  int poll[length];
+  for (int i = 0; i < length; i++) {
+    poll[i] = queryButton(keypadChannels[i]);
+  }
+  for (int i = 0; i < length; i++) {
+    if (poll[i] == HIGH) {
       inputState[inputPos++] = i + 1;
-      if (inputPos == sizeof(inputState) / sizeof(inputState[0])) {
-        processInput();
-        blinkLed(buttonFeedbackPin, 100);
-        inputPos = 0;
-      } else {
-        blinkLed(buttonFeedbackPin, 50);
-      }
+      blinkLed(buttonFeedbackPin, 100);
+      break;
     }
+  }
+  if (inputPos == (sizeof(inputState) / sizeof(inputState[0]))) {
+    blinkLed(buttonFeedbackPin, 200);
+    processInput1();
+    /*for (int i = 0; i < inputState[0]; i++) {
+      blinkLed(buttonFeedbackPin, 300);
+    }*/
+    inputPos = 0;
   }
 }
 
 void setup() {
-  //Serial.begin(9600);
   for (int i = 0; i < sizeof(bansheeChannels) / sizeof(bansheeChannels[0]); i++) {
     pinMode(bansheeChannels[i], OUTPUT);
+    digitalWrite(bansheeChannels[i], HIGH);
   }
   pinMode(buttonFeedbackPin, OUTPUT);
   for (int i = 0; i < sizeof(keypadChannels) / sizeof(keypadChannels[0]); i++) {
@@ -302,7 +329,15 @@ void setup() {
   initMarciaImperiale();
   initSantanninoPuzza();
   
+  stopPlayback();
+  setStaticLights(HIGH, HIGH);
+  
   //playFiumeArno();
+  
+  /*digitalWrite(buttonFeedbackPin, HIGH);
+  myDelay(100);
+  digitalWrite(buttonFeedbackPin, LOW);
+  myDelay(100);*/
 }
 
 void loop() {
@@ -311,5 +346,6 @@ void loop() {
   } else {
     melodyIteration();
   }
+  
   queryButtons();
 }
