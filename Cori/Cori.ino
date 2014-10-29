@@ -273,6 +273,7 @@ void queryButtons() {
       if (inputPos == sizeof(inputState) / sizeof(inputState[0])) {
         processInput();
         blinkLed(buttonFeedbackPin, 100);
+        inputPos = 0;
       } else {
         blinkLed(buttonFeedbackPin, 50);
       }
