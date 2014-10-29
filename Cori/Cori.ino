@@ -196,6 +196,8 @@ void blinkLed(int pin, int ms) {
 static int queryButton(int number) {
   int res = LOW;
   int state = digitalRead(number);
+  // Invert state, because we are using INPUT_PULLUP
+  state = state == HIGH ? LOW : HIGH;
   if (state == HIGH && buttonState[number] == LOW) {
     res = HIGH;
   }
@@ -287,6 +289,9 @@ void setup() {
     pinMode(bansheeChannels[i], OUTPUT);
   }
   pinMode(buttonFeedbackPin, OUTPUT);
+  for (int i = 0; i < sizeof(keypadChannels) / sizeof(keypadChannels[0]); i++) {
+    pinMode(keypadChannels[i], INPUT_PULLUP);
+  }
   
   initFiumeArno();
   initSantannaMerda();
